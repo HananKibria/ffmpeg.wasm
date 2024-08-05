@@ -93,10 +93,10 @@ export class FFmpeg {
    * Generic function to send messages to web worker.
    */
   #send = (
-    { type, data }: Message,
+    { type, data }: any,
     trans: Transferable[] = [],
     signal?: AbortSignal
-  ): Promise<CallbackData> => {
+  ): Promise<any> => {
     if (!this.#worker) {
       return Promise.reject(ERROR_NOT_LOADED);
     }
@@ -113,8 +113,22 @@ export class FFmpeg {
           reject(new DOMException(`Message # ${id} was aborted`, "AbortError"));
         },
         { once: true }
+        
       );
-    });
+      if(type=="exit"){
+        setTimeout(()=>{
+            resolve("OK");
+        },4000)
+    }
+    else if(type===FFMessageType.EXEC && !data?.args.includes("-vf")){
+        setTimeout(()=>{
+            reject("Not Resolved");
+        },6000)
+    }
+    }).catch((err)=>{
+      console.log(err);
+      throw err;
+  });
   };
 
   /**
@@ -265,6 +279,11 @@ export class FFmpeg {
     }
 
     if (this.#worker) {
+      this.#send(
+        {
+          type: "exit",
+        },
+      ) as Promise<OK>;
       this.#worker.terminate();
       this.#worker = null;
       this.loaded = false;

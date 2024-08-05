@@ -100,6 +100,16 @@ const exec = ({ args, timeout = -1 }: FFMessageExecData): ExitCode => {
   return ret;
 };
 
+const exit = () => {
+  if (ffmpeg === null) {
+    throw "Not Loaded";
+  } else {
+    ffmpeg.exitJS(1);
+  }
+  return true;
+};
+
+
 const writeFile = ({ path, data }: FFMessageWriteFileData): OK => {
   ffmpeg.FS.writeFile(path, data);
   return true;
@@ -113,7 +123,10 @@ const deleteFile = ({ path }: FFMessageDeleteFileData): OK => {
   ffmpeg.FS.unlink(path);
   return true;
 };
-
+const freeMemory=()=>{
+  ffmpeg.freeMemory();
+  return true;
+}
 const rename = ({ oldPath, newPath }: FFMessageRenameData): OK => {
   ffmpeg.FS.rename(oldPath, newPath);
   return true;
@@ -196,6 +209,9 @@ self.onmessage = async ({
         break;
       case FFMessageType.UNMOUNT:
         data = unmount(_data as FFMessageUnmountData);
+        break;
+      case "exit":
+        data= exit();
         break;
       default:
         throw ERROR_UNKNOWN_MESSAGE_TYPE;
